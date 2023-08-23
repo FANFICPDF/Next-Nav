@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from "react";
-import LayoutFlow from "./LayoutFlow";
-import { ReactFlowProvider } from "reactflow";
-import Node from "./Node";
+import React, { useEffect, useState } from 'react';
+import LayoutFlow from './LayoutFlow';
+import { ReactFlowProvider } from 'reactflow';
+import Node from './Node';
+import { useVsCodeApi } from '../VsCodeApiContext';
 
 export type FileNode = {
   id: number;
   folderName: string;
   parentNode: number | null;
-  contents?: string[];
-  path?: string;
+  contents: string[];
+  path: string;
 };
 
 export type Tree = FileNode[];
@@ -17,39 +18,45 @@ export type Tree = FileNode[];
 const initNodes: Tree = [
   {
     id: 0,
-    folderName: "Root",
+    folderName: 'Root',
     parentNode: null,
-    contents: ["globals.css", "layout.js", "page.jsx", "page.module.css"],
+    contents: ['globals.css', 'layout.js', 'page.jsx', 'page.module.css'],
+    path: 'home/code/Root',
   },
   {
     id: 1,
-    folderName: "Child",
+    folderName: 'Child',
     parentNode: 0,
-    contents: ["page.jsx", "page.module.css"],
+    contents: ['page.jsx', 'page.module.css'],
+    path: 'home/code/Child',
   },
   {
     id: 2,
-    folderName: "Child",
+    folderName: 'Child',
     parentNode: 0,
-    contents: ["page.jsx", "page.module.css"],
+    contents: ['page.jsx', 'page.module.css'],
+    path: 'home/code/Child',
   },
   {
     id: 3,
-    folderName: "Sub-Child",
+    folderName: 'Sub-Child',
     parentNode: 2,
-    contents: ["page.jsx", "page.module.css"],
+    contents: ['page.jsx', 'page.module.css'],
+    path: 'home/code/Sub-Child',
   },
   {
     id: 4,
-    folderName: "Sub-Child",
+    folderName: 'Sub-Child',
     parentNode: 2,
-    contents: ["page.jsx", "page.module.css"],
+    contents: ['page.jsx', 'page.module.css'],
+    path: 'home/code/Sub-Child',
   },
   {
     id: 5,
-    folderName: "Child",
+    folderName: 'Child',
     parentNode: 0,
-    contents: ["loading.jsx", "page.jsx", "page.module.css"],
+    contents: ['loading.jsx', 'page.jsx', 'page.module.css'],
+    path: 'home/code/Child',
   },
 ];
 
@@ -58,22 +65,33 @@ export default function TreeContainer() {
   const [initialNodes, setInitialNodes] = useState<any[]>([]);
   const [initialEdges, setInitialEdges] = useState<any[]>([]);
   const [isParsed, setIsParsed] = useState(false); //tracks if the parseData function was called
-  const [directory, setDirectory] = useState("");
+  const [directory, setDirectory] = useState('');
+  const vscode = useVsCodeApi();
 
   useEffect(() => {
-    window.addEventListener("message", handleReceivedMessage);
+    window.addEventListener('message', handleReceivedMessage);
     return () => {
-      window.removeEventListener("message", handleReceivedMessage);
+      window.removeEventListener('message', handleReceivedMessage);
     };
   }, []);
 
   const handleReceivedMessage = (event: MessageEvent) => {
     const message = event.data;
     switch (message.command) {
-      case "sendString":
+      case 'sendString':
         setDirectory(message.data);
         break;
     }
+  };
+
+  //get directory
+  const handleRequestDirectory = () => {
+    // console.log('srcDir: ', srcDirRef.current, ' appDir: ', appDirRef.current);
+    vscode.postMessage({
+      command: 'getRequest',
+      src: 'src',
+      app: 'app',
+    });
   };
 
   const parseData = (serverResponse: Tree) => {
@@ -87,9 +105,7 @@ export default function TreeContainer() {
       newNodes.push({
         id: `${obj.id}`,
         data: {
-          label: (
-            <Node props={obj} />
-          ),
+          label: <Node props={obj} />,
         },
         position,
       });
@@ -99,13 +115,13 @@ export default function TreeContainer() {
           id: `${obj.parentNode}_${obj.id}`,
           source: `${obj.parentNode}`, //this is the parents id
           target: `${obj.id}`,
-          type: "smoothstep", //determines the line style
-          animated: true //displays marching ants
+          type: 'smoothstep', //determines the line style
+          animated: true, //displays marching ants
         });
       }
     });
     //update state with new nodes and edges
-    setInitialNodes(newNodes); 
+    setInitialNodes(newNodes);
     setInitialEdges(newEdges);
     setIsParsed(true);
   };
@@ -116,13 +132,14 @@ export default function TreeContainer() {
   }, []);
 
   return (
-
     //if isParsed has not been called, don't display the ReactFlow content:
     <div>
+      <button onClick={handleRequestDirectory}>get directory</button>
       {isParsed ? (
         //this outer div is required to give the size of the ReactFlow window
-        <div style={{ width: "100vw", height: "100vh", display: "flex" }}>
+        <div style={{ width: '100vw', height: '100vh', display: 'flex' }}>
           {/* Must Wrap the Layout flow in the ReactFlow component imported from ReactFLOW */}
+
           <ReactFlowProvider>
             <LayoutFlow
               initialNodes={initialNodes}
