@@ -42,7 +42,7 @@ const initNodes: Tree = [
     id: 4,
     folderName: 'contact',
     parentNode: 0,
-    contents: ['loading.jsx', 'page.jsx', 'page.module.css'],
+    // contents: ['loading.jsx', 'page.jsx', 'page.module.css'],
   },
 ];
 
@@ -116,7 +116,15 @@ export default function TreeContainer() {
   return (
     <div>
       {isParsed ? (
-        <div style={{ width: '100vw', height: '100vh', display: 'flex' }}>
+        <div
+          style={{
+            width: '100vw',
+            height: '100vh',
+            display: 'flex',
+            margin: '0px',
+            padding: '0px',
+          }}
+        >
           <ReactFlowProvider>
             <LayoutFlow
               initialNodes={initialNodes}
